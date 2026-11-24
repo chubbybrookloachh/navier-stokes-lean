@@ -220,7 +220,7 @@ things like this at all. My heartfelt thanks to everyone who builds and maintain
 ## About the author
 
 These notes are written under the name `chubbybrookloachh`. For now I prefer to keep my real
-identity private, so that the notes can be read on their own merits. `PROOF_OF_AUTHORSHIP.txt`
+identity private, so that the notes can be read on their own merits. `authorship/PROOF_OF_AUTHORSHIP.txt`
 explains how authorship can be confirmed later if needed.
 
 **PGP Fingerprint:** 96FC 4E0E 82B7 CF5D AEED A309 A315 0C5D 5E33 D350 ([public-key.asc](./public-key.asc))
