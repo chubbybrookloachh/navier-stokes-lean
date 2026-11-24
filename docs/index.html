@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Little Note</title>
+<meta name="description" content="A little note from the author of navier-stokes-lean, a Lean 4 notebook on the 3D periodic Navier–Stokes equations.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Kalam:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --paper: #FAF8F5;
+    --card: #fffdf9;
+    --ink: #2f2d2a;
+    --muted: #7d776d;
+    --rule: #ddd6ca;
+    --rose: #c96f5b;
+    --sage: #7f9c86;
+    --sky: #7d9fb8;
+    --accent: #9a4f3d;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --hand: "Kalam", "Bradley Hand", "Segoe Print", "Comic Neue", cursive;
+    --hand-title: "Caveat", "Bradley Hand", "Segoe Print", cursive;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--serif); font-size: 18px; line-height: 1.7;
+    overflow-x: hidden;
+  }
+  /* soft watercolour washes */
+  body::before, body::after {
+    content: ""; position: fixed; z-index: 0; pointer-events: none; border-radius: 50%;
+    filter: blur(60px); opacity: .35;
+  }
+  body::before { width: 520px; height: 420px; top: -140px; left: -160px;
+    background: radial-gradient(closest-side, rgba(201,111,91,.55), rgba(201,111,91,0)); }
+  body::after { width: 560px; height: 460px; bottom: -180px; right: -180px;
+    background: radial-gradient(closest-side, rgba(125,159,184,.55), rgba(125,159,184,0)); }
+  main { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; padding: 56px 16px 72px; }
+
+  /* ---- the note paper (docs/moon-note.png, 1753 x 2480 px) ----
+     Ruled lines sit at y = 490 + k*105.8 px (k = 0..15), x = 173..1576 px.
+     Default (no JS, or a narrow screen): the paper is rebuilt from its top and bottom strips with
+     CSS-drawn lines in between, so it can grow. With JS on a wide screen (.fit), the real sheet
+     is shown whole and the text is sized to sit on its sixteen lines. */
+  .paper {
+    position: relative; max-width: 680px; margin: 0 auto; background: #fff;
+    box-shadow: 0 1px 2px rgba(60,50,40,.08), 0 22px 44px -26px rgba(60,50,40,.45);
+  }
+  .paper .sheet { display: none; }
+  .paper .head { padding-top: 21.9%;   /* 384 / 1753: title strip */
+    background: url("./moon-note.png") center top / 100% auto no-repeat; }
+  .paper .foot { padding-top: 21.11%;  /* 370 / 1753: moon-phase strip */
+    background: url("./moon-note.png") center bottom / 100% auto no-repeat; }
+  .writing {
+    margin: 0 10.1% 0 9.87%; padding: 0 3.4% 0 2.6%;
+    font-family: var(--hand); font-weight: 300; color: #2b2a33; font-size: 15.5px; line-height: 32px;
+    overflow-wrap: break-word;
+    background: repeating-linear-gradient(to bottom, transparent 0 31px, rgba(25,25,25,.85) 31px 32px);
+  }
+  .writing h1 { font-family: var(--hand-title); font-weight: 600; font-size: 1.75em; line-height: inherit; margin: 0; color: #3b3548; }
+  .writing p { margin: 0; }
+  .writing a { color: #8a4a3a; }
+  .writing .bl { display: inline-block; width: 0; height: 0; vertical-align: baseline; }
+
+  .paper.fit { aspect-ratio: 1753 / 2480; }
+  .paper.fit .sheet { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
+  .paper.fit .head, .paper.fit .foot { display: none; }
+  .paper.fit .writing { position: absolute; left: 9.87%; right: 10.1%; margin: 0; background: none; }
+
+  hr.thin { border: 0; height: 1px; margin: 56px auto 40px; width: 60%;
+    background: linear-gradient(90deg, transparent, var(--rule) 20%, var(--rule) 80%, transparent); }
+
+  .fund { text-align: center; }
+  .fund h2 { font-weight: 400; font-size: 24px; margin: 0 0 8px; }
+  .fund .lede { color: var(--muted); font-size: 16.5px; max-width: 560px; margin: 0 auto 24px; }
+  .wallet {
+    display: grid; grid-template-columns: auto 1fr; gap: 24px; align-items: center; text-align: left;
+    background: var(--card); border: 1px solid var(--rule); border-radius: 4px; padding: 20px; max-width: 620px; margin: 0 auto;
+  }
+  .qr { width: 168px; height: 168px; background: #fff; border: 1px solid var(--rule); border-radius: 3px; padding: 4px; }
+  .qr svg { display: block; width: 100%; height: 100%; }
+  .label { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+  .addr { font-family: var(--mono); font-size: 14.5px; word-break: break-all; margin: 0 0 14px; color: var(--ink); }
+  button.copy {
+    font: inherit; font-size: 15px; cursor: pointer; color: var(--ink);
+    background: #fff; border: 1px solid #cfc6b8; border-radius: 999px; padding: 7px 18px;
+    transition: background .15s, border-color .15s;
+  }
+  button.copy:hover { background: #f4efe7; border-color: var(--muted); }
+  button.copy:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
+  .status { display: inline-block; margin-left: 10px; font-size: 14px; color: var(--sage); min-height: 1em; }
+  .fine { font-size: 13.5px; color: var(--muted); margin: 12px 0 0; }
+  footer { text-align: center; color: var(--muted); font-size: 14px; margin-top: 44px; }
+
+  @media (max-width: 560px) {
+    body { font-size: 17px; }
+    main { padding-top: 32px; }
+    .wallet { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+  <figure class="paper" id="letter" aria-labelledby="note-title">
+    <img class="sheet" src="./moon-note.png" alt="" width="1753" height="2480">
+    <div class="head" aria-hidden="true"></div>
+    <div class="writing" id="writing">
+      <h1 id="note-title"><span class="bl"></span>A Little Note</h1>
+      <p>Hello, and thank you so much for stopping by! I put this little note together mainly because I am way too forgetful to keep track of long equations in my head—if I don't write them down, they disappear right away! Lean says everything compiles cleanly now, though I still hope I didn't miss anything silly! Huge thanks to the brilliant mathematicians and the Lean &amp; Mathlib community whose care, rigor, and generosity make exploring ideas like this possible.</p>
+      <p>Everything here is shared simply as it is, with no big claims or future promises—just a quiet snapshot of what has been checked so far. If you notice a small hiccup or have a fun idea about these vortex flows, I would really enjoy hearing your thoughts in the <a href="https://github.com/chubbybrookloachh/navier-stokes-lean/issues" rel="noopener">Issues</a> or via <a href="mailto:chubbybrookloachh@proton.me">email</a>. Now that everything compiles, I'm taking a little breather; if these notes brought a smile to your face or saved you a bit of time, feel free to chip in for my sweet treat &amp; bag fund below (totally optional, of course!). Wishing you a lovely day!</p>
+    </div>
+    <div class="foot" aria-hidden="true"></div>
+  </figure>
+
+  <hr class="thin">
+
+  <section class="fund" aria-labelledby="fund-title">
+    <h2 id="fund-title">Sweet Treat &amp; Bag Fund</h2>
+    <p class="lede">If these notes brought you a little joy or saved you some time, and you would
+    like to treat me to something sweet or put a little towards a new bag, any contribution is
+    warmly appreciated, and never expected.</p>
+
+    <div class="wallet">
+      <div class="qr" id="qr" aria-hidden="false"></div>
+      <div>
+        <p class="label">USDC / ETH · Ethereum, Base or Arbitrum</p>
+        <p class="addr" id="addr">0x4368909c9E0F989D665C5603610b039aBbE90C79</p>
+        <button type="button" class="copy" id="copy">Copy Address</button>
+        <span class="status" id="status" role="status" aria-live="polite"></span>
+        <p class="fine">Please double-check the address and the network before sending:
+        on-chain transfers cannot be reversed.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>navier-stokes-lean · chubbybrookloachh</footer>
+</main>
+
+<script>
+/* Fit the note onto the sixteen ruled lines of moon-note.png; fall back to the growing paper. */
+(function () {
+  var paper = document.getElementById('letter'), w = document.getElementById('writing');
+  var IMG_W = 1753, LINE1 = 490, GAP = 105.8, ROWS = 16, MIN_FONT = 13;
+  function layout() {
+    paper.classList.add('fit');
+    var k = paper.clientWidth / IMG_W, L = GAP * k, f;
+    w.style.lineHeight = L + 'px'; w.style.top = '0px';
+    for (f = L * 0.42; f >= MIN_FONT; f -= 0.25) {
+      w.style.fontSize = f + 'px';
+      if (w.scrollHeight <= ROWS * L + 1) break;
+    }
+    if (f < MIN_FONT) {           /* too narrow to read: let the paper grow instead */
+      paper.classList.remove('fit');
+      w.style.fontSize = w.style.lineHeight = w.style.top = '';
+      return;
+    }
+    var bl = w.querySelector('.bl').getBoundingClientRect().top - w.getBoundingClientRect().top;
+    w.style.top = (LINE1 * k - 0.17 * L - bl) + 'px';   /* first baseline just above line 1 */
+  }
+  var queued = false;
+  function schedule() { if (!queued) { queued = true; requestAnimationFrame(function () { queued = false; layout(); }); } }
+  schedule();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedule);
+  window.addEventListener('resize', schedule);
+})();
+</script>
+<script>
+/* Minimal QR encoder in plain JavaScript: byte mode, error-correction level M,
+   versions 1–10 (up to 213 bytes). No dependencies. Returns a square boolean matrix. */
+const MiniQR = (() => {
+  // [ecPerBlock, [blocks, dataPerBlock], [blocks, dataPerBlock]] for level M, versions 1..10
+  const TABLE = [null,
+    [10, [1, 16]], [16, [1, 28]], [26, [1, 44]], [18, [2, 32]], [24, [2, 43]],
+    [16, [4, 27]], [18, [4, 31]], [22, [2, 38], [2, 39]], [22, [3, 36], [2, 37]], [26, [4, 43], [1, 44]]];
+  const ALIGN = [null, [], [6, 18], [6, 22], [6, 26], [6, 30], [6, 34],
+    [6, 22, 38], [6, 24, 42], [6, 26, 46], [6, 28, 50]];
+  const REMAINDER_BITS = [0, 0, 7, 7, 7, 7, 7, 0, 0, 0, 0];
+
+  const gfMul = (x, y) => {
+    let z = 0;
+    for (let i = 7; i >= 0; i--) { z = (z << 1) ^ ((z >>> 7) * 0x11d); z ^= ((y >>> i) & 1) * x; }
+    return z & 0xff;
+  };
+  const rsDivisor = (degree) => {
+    const r = new Array(degree).fill(0); r[degree - 1] = 1; let root = 1;
+    for (let i = 0; i < degree; i++) {
+      for (let j = 0; j < degree; j++) { r[j] = gfMul(r[j], root); if (j + 1 < degree) r[j] ^= r[j + 1]; }
+      root = gfMul(root, 0x02);
+    }
+    return r;
+  };
+  const rsRemainder = (data, div) => {
+    const r = new Array(div.length).fill(0);
+    for (const b of data) {
+      const f = b ^ r.shift(); r.push(0);
+      for (let i = 0; i < div.length; i++) r[i] ^= gfMul(div[i], f);
+    }
+    return r;
+  };
+  const dataCapacity = (v) => { const t = TABLE[v]; let n = 0; for (const g of t.slice(1)) n += g[0] * g[1]; return n; };
+
+  function encode(text) {
+    const bytes = Array.from(new TextEncoder().encode(text));
+    let ver = 0;
+    for (let v = 1; v <= 10; v++) {
+      const cc = v < 10 ? 8 : 16;
+      if (4 + cc + bytes.length * 8 <= dataCapacity(v) * 8) { ver = v; break; }
+    }
+    if (!ver) throw new Error('Text too long for this QR encoder');
+    const cap = dataCapacity(ver);
+
+    // --- data bit stream
+    const bits = [];
+    const put = (val, len) => { for (let i = len - 1; i >= 0; i--) bits.push((val >>> i) & 1); };
+    put(0b0100, 4); put(bytes.length, ver < 10 ? 8 : 16);
+    for (const b of bytes) put(b, 8);
+    put(0, Math.min(4, cap * 8 - bits.length));
+    while (bits.length % 8) bits.push(0);
+    const data = [];
+    for (let i = 0; i < bits.length; i += 8) { let b = 0; for (let j = 0; j < 8; j++) b = (b << 1) | bits[i + j]; data.push(b); }
+    for (let pad = 0xec; data.length < cap; pad ^= 0xec ^ 0x11) data.push(pad);
+
+    // --- blocks + error correction + interleaving
+    const t = TABLE[ver], ecLen = t[0], div = rsDivisor(ecLen);
+    const blocks = []; let k = 0;
+    for (const [n, len] of t.slice(1)) for (let i = 0; i < n; i++) { const d = data.slice(k, k + len); k += len; blocks.push([d, rsRemainder(d, div)]); }
+    const codewords = [];
+    const maxD = Math.max(...blocks.map(b => b[0].length));
+    for (let i = 0; i < maxD; i++) for (const b of blocks) if (i < b[0].length) codewords.push(b[0][i]);
+    for (let i = 0; i < ecLen; i++) for (const b of blocks) codewords.push(b[1][i]);
+
+    // --- matrix with function patterns
+    const size = ver * 4 + 17;
+    const mod = Array.from({ length: size }, () => new Array(size).fill(false));
+    const fn = Array.from({ length: size }, () => new Array(size).fill(false));
+    const setF = (x, y, dark) => { mod[y][x] = dark; fn[y][x] = true; };
+    for (let i = 0; i < size; i++) { setF(6, i, i % 2 === 0); setF(i, 6, i % 2 === 0); }
+    for (const [cx, cy] of [[3, 3], [size - 4, 3], [3, size - 4]]) {
+      for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) {
+        const d = Math.max(Math.abs(dx), Math.abs(dy)), x = cx + dx, y = cy + dy;
+        if (x >= 0 && x < size && y >= 0 && y < size) setF(x, y, d !== 2 && d !== 4);
+      }
+    }
+    const al = ALIGN[ver], last = al.length - 1;
+    for (let i = 0; i < al.length; i++) for (let j = 0; j < al.length; j++) {
+      if ((i === 0 && j === 0) || (i === 0 && j === last) || (i === last && j === 0)) continue;
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++)
+        setF(al[i] + dx, al[j] + dy, Math.max(Math.abs(dx), Math.abs(dy)) !== 1);
+    }
+    const drawFormat = (mask) => {
+      const d = (0 << 3) | mask; // level M = 00
+      let rem = d; for (let i = 0; i < 10; i++) rem = (rem << 1) ^ ((rem >>> 9) * 0x537);
+      const b = ((d << 10) | rem) ^ 0x5412, bit = (i) => ((b >>> i) & 1) !== 0;
+      for (let i = 0; i <= 5; i++) setF(8, i, bit(i));
+      setF(8, 7, bit(6)); setF(8, 8, bit(7)); setF(7, 8, bit(8));
+      for (let i = 9; i < 15; i++) setF(14 - i, 8, bit(i));
+      for (let i = 0; i < 8; i++) setF(size - 1 - i, 8, bit(i));
+      for (let i = 8; i < 15; i++) setF(8, size - 15 + i, bit(i));
+      setF(8, size - 8, true);
+    };
+    drawFormat(0);
+    if (ver >= 7) {
+      let rem = ver; for (let i = 0; i < 12; i++) rem = (rem << 1) ^ ((rem >>> 11) * 0x1f25);
+      const b = (ver << 12) | rem;
+      for (let i = 0; i < 18; i++) {
+        const dark = ((b >>> i) & 1) !== 0, a = size - 11 + (i % 3), c = Math.floor(i / 3);
+        setF(a, c, dark); setF(c, a, dark);
+      }
+    }
+
+    // --- place codewords in the zig-zag order
+    const total = codewords.length * 8 + REMAINDER_BITS[ver];
+    let idx = 0;
+    for (let right = size - 1; right >= 1; right -= 2) {
+      if (right === 6) right = 5;
+      for (let vert = 0; vert < size; vert++) for (let j = 0; j < 2; j++) {
+        const x = right - j, up = ((right + 1) & 2) === 0, y = up ? size - 1 - vert : vert;
+        if (!fn[y][x] && idx < total) {
+          const cw = idx >>> 3;
+          mod[y][x] = cw < codewords.length ? ((codewords[cw] >>> (7 - (idx & 7))) & 1) === 1 : false;
+          idx++;
+        }
+      }
+    }
+
+    // --- masks
+    const MASKS = [
+      (x, y) => (x + y) % 2 === 0, (x, y) => y % 2 === 0, (x, y) => x % 3 === 0,
+      (x, y) => (x + y) % 3 === 0, (x, y) => (Math.floor(x / 3) + Math.floor(y / 2)) % 2 === 0,
+      (x, y) => (x * y) % 2 + (x * y) % 3 === 0, (x, y) => ((x * y) % 2 + (x * y) % 3) % 2 === 0,
+      (x, y) => ((x + y) % 2 + (x * y) % 3) % 2 === 0];
+    const applyMask = (m) => {
+      for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) if (!fn[y][x] && MASKS[m](x, y)) mod[y][x] = !mod[y][x];
+    };
+    const penalty = () => {
+      let p = 0, dark = 0;
+      const line = (get) => {
+        for (let a = 0; a < size; a++) {
+          let run = 1;
+          for (let b = 1; b <= size; b++) {
+            if (b < size && get(a, b) === get(a, b - 1)) run++;
+            else { if (run >= 5) p += 3 + (run - 5); run = 1; }
+          }
+          for (let b = 0; b + 11 <= size; b++) {
+            const s = []; for (let c = 0; c < 11; c++) s.push(get(a, b + c) ? 1 : 0);
+            const str = s.join('');
+            if (str === '10111010000' || str === '00001011101') p += 40;
+          }
+        }
+      };
+      line((a, b) => mod[a][b]); line((a, b) => mod[b][a]);
+      for (let y = 0; y + 1 < size; y++) for (let x = 0; x + 1 < size; x++) {
+        const c = mod[y][x];
+        if (c === mod[y][x + 1] && c === mod[y + 1][x] && c === mod[y + 1][x + 1]) p += 3;
+      }
+      for (const row of mod) for (const c of row) if (c) dark++;
+      p += Math.floor(Math.abs(dark * 20 - size * size * 10) / (size * size)) * 10;
+      return p;
+    };
+    let best = 0, bestP = Infinity;
+    for (let m = 0; m < 8; m++) {
+      applyMask(m); drawFormat(m);
+      const p = penalty(); if (p < bestP) { bestP = p; best = m; }
+      applyMask(m);
+    }
+    applyMask(best); drawFormat(best);
+    return { size, version: ver, mask: best, modules: mod };
+  }
+
+  function toSVG(text, opts = {}) {
+    const { size, modules } = encode(text);
+    const q = 4, n = size + 2 * q, dark = opts.dark || '#2f2d2a', light = opts.light || '#ffffff';
+    let d = '';
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) if (modules[y][x]) d += `M${x + q},${y + q}h1v1h-1z`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" role="img" aria-label="${opts.label || 'QR code'}">` +
+      `<rect width="${n}" height="${n}" fill="${light}"/><path d="${d}" fill="${dark}"/></svg>`;
+  }
+
+  return { encode, toSVG, _rs: { rsDivisor, rsRemainder } };
+})();
+(function () {
+  var address = document.getElementById('addr').textContent.trim();
+  try {
+    document.getElementById('qr').innerHTML =
+      MiniQR.toSVG(address, { dark: '#2f2d2a', light: '#ffffff', label: 'QR code of the wallet address' });
+  } catch (e) {
+    document.getElementById('qr').hidden = true;
+  }
+  var btn = document.getElementById('copy'), status = document.getElementById('status');
+  function done(msg) { status.textContent = msg; setTimeout(function () { status.textContent = ''; }, 2400); }
+  function fallback() {
+    var t = document.createElement('textarea');
+    t.value = address; t.setAttribute('readonly', ''); t.style.position = 'absolute'; t.style.left = '-9999px';
+    document.body.appendChild(t); t.select();
+    var ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(t);
+    done(ok ? 'Copied — thank you!' : 'Please copy it by hand');
+  }
+  btn.addEventListener('click', function () {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(address).then(function () { done('Copied — thank you!'); }, fallback);
+    } else { fallback(); }
+  });
+})();
+</script>
+</body>
+</html>

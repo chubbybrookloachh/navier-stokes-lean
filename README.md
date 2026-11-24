@@ -153,10 +153,10 @@ text:
 **What this comparison is based on, and what is still pending.** To be clear about the source:
 the comparison described in this section was made against the **official PDF of the volume
 published on the website of the Clay Mathematics Institute**. I have **not yet** checked the
-printed book. A physical copy held by The British Library, London (shelfmark
-`YK.2007.b.4238`), has been requested, and I plan to compare it directly in the Reading Room on
-26 November 2026. Until then, the `[VERIFIED: …]` tags below mean "checked against the official
-CMI PDF", not "checked against the printed volume". I will update this section after that visit,
+printed book. The British Library's physical copy (shelfmark `YK.2007.b.4238`) is kept in an
+off-site store outside London, so I have ordered it in, which takes about 48 hours. The final
+side-by-side comparison in the Reading Room is booked for 28 November 2026. Until then, the
+`[VERIFIED: …]` tags below mean "checked against the official CMI PDF", not "checked against the printed volume". I will update this section after that visit,
 including any difference I find.
 
 Equations (1), (2), (3) are on p. 57; conditions (8)–(11) and statement (D) are on p. 58. Each of
@@ -223,12 +223,10 @@ These notes are written under the name `chubbybrookloachh`. For now I prefer to 
 identity private, so that the notes can be read on their own merits. `PROOF_OF_AUTHORSHIP.txt`
 explains how authorship can be confirmed later if needed.
 
----
-
-thanks for stopping by and reading through this notebook. the core reduction pipeline builds cleanly, so i'm taking a small breather now. i'm currently trying to raise a £5,000 holiday fund to recharge before starting my next project — if this work brought you any joy or value and you'd like to chip in or collaborate, feel free to reach out at chubbybrookloachh@proton.me.
-
 **PGP Fingerprint:** 96FC 4E0E 82B7 CF5D AEED A309 A315 0C5D 5E33 D350 ([public-key.asc](./public-key.asc))
 
-### Support / Travel Fund
-If you find this formalization interesting or helpful and would like to support my work (or contribute to my 1-month holiday/travel fund), any contribution is deeply appreciated:
-- **USDC / ETH (Ethereum / Base / Arbitrum):** `0x4368909c9E0F989D665C5603610b039aBbE90C79`
+## Notes on Further Exploration & Support
+
+This repository is released as a self-contained formalisation of the reduction framework (`NSBlowupConjecture → ClayMillenniumProblemD`) and its symmetric initial data (`toroidalDipoleInit`). Notice that the constructions in `H3–H4` are calibrated specifically around the invariant geometry of `OddSymmetrySpace`; whether these constraints admit dynamic trajectories depends entirely on how one frames the initial state.
+
+If you find this verified benchmark useful for formal mathematics or AI theorem-proving research and wish to support independent study, optional sponsorship links are available in [`.github/FUNDING.yml`](./.github/FUNDING.yml) (or via `chubbybrookloachh@proton.me`). For a quieter, non-technical reflection on these notes, see [A Little Note](./docs/index.html).
