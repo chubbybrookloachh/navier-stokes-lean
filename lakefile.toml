@@ -1,0 +1,22 @@
+name = "NavierStokesLean"
+defaultTargets = ["NavierStokesLemmas", "KingExileConjecture", "NavierStokesTorus", "NavierStokesBlowup", "NavierStokesObstructions"]
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.37.0-rc1"
+
+[[lean_lib]]
+name = "NavierStokesLemmas"
+
+[[lean_lib]]
+name = "KingExileConjecture"
+
+[[lean_lib]]
+name = "NavierStokesTorus"
+
+[[lean_lib]]
+name = "NavierStokesBlowup"
+
+[[lean_lib]]
+name = "NavierStokesObstructions"

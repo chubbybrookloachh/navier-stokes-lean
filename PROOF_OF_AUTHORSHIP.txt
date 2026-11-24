@@ -1,0 +1,76 @@
+PROOF OF AUTHORSHIP
+===================
+
+Author
+------
+These notes are published under the name `chubbybrookloachh`.
+
+Why a pseudonym
+---------------
+For the time being, chubbybrookloachh prefers to keep their real identity private. The only
+reason is a wish for the work to be read and judged on its own merits, without any influence
+from who wrote it. There is nothing more to it than that.
+
+So that authorship can still be confirmed later if it is ever needed, the author publishes a
+cryptographic commitment: a SHA-256 hash of a short private statement. The hash reveals nothing
+about the statement. Later, the author can reveal the statement, and anyone can recompute the
+hash and see that it matches the one published here.
+
+
+Published commitment
+--------------------
+SHA-256: dcba9638fd608b774c6c6ad2ee1a43986522e18d821ec20cd330e3960910f1e0
+
+
+How to create the commitment (macOS Terminal)
+---------------------------------------------
+Every command below runs locally. Nothing is sent over the network.
+
+1. Make a private folder OUTSIDE this repository, so that the secret can never be committed by
+   accident:
+
+       mkdir -p ~/authorship-private
+       cd ~/authorship-private
+
+2. Generate a long random secret (the "salt"). Without it, someone could guess a short statement
+   such as a name and check the guess against the hash.
+
+       openssl rand -hex 32 > salt.txt
+
+3. Write the private statement. Replace the parts in angle brackets with your own words. Do not
+   change the file after you compute the hash: even one extra space or line break changes it.
+
+       printf 'I am chubbybrookloachh, the author of the navier-stokes-lean notes.\nName: <your real name>\nContact: <a contact you control>\nSalt: %s\n' "$(cat salt.txt)" > statement.txt
+
+4. Compute the SHA-256 hash of the statement:
+
+       shasum -a 256 statement.txt
+
+   The output looks like `<64 hexadecimal characters>  statement.txt`. Copy only the 64
+   characters into the "Published commitment" section above.
+
+5. Keep `statement.txt` and `salt.txt` safe and private, for example on an encrypted drive with
+   a backup. If they are lost, the commitment cannot be opened. If they leak, anyone could open it.
+
+6. Give the commitment a date. A hash proves nothing about WHEN it was made, so publish it
+   somewhere with a trustworthy timestamp. Committing this file to the public repository is
+   usually enough, because the commit date and the GitHub history serve as the timestamp. An
+   independent timestamp, such as OpenTimestamps (https://opentimestamps.org), can be added if
+   desired.
+
+
+How to confirm authorship later
+-------------------------------
+The author shares `statement.txt` exactly as it was written. Anyone can then run:
+
+    shasum -a 256 statement.txt
+
+If the result equals the hash published above, and that hash was public before any competing
+claim, then the person who holds the statement is the one who made the commitment.
+
+
+A gentle note
+-------------
+This commitment only shows that whoever reveals the statement also wrote it before the date of
+the commitment. It is offered simply as a courtesy, to keep things clear and honest for
+everyone.

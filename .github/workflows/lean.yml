@@ -1,0 +1,22 @@
+name: Lean build & axiom check
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Install elan from lean-toolchain, fetch the Mathlib cache, run `lake build`.
+      - uses: leanprover/lean-action@v1
+        with:
+          build: true
+          use-mathlib-cache: true
+
+      # No new `axiom`; every core theorem uses only propext, Classical.choice, Quot.sound.
+      - name: Axiom check
+        run: ./scripts/check_axioms.sh
